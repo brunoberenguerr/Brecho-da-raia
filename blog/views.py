@@ -1,4 +1,4 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
@@ -8,6 +8,13 @@ from .forms import PostForm
 from .models import Category, Comment, Post
 
 
+class PostOwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    """Visitantes vão para o login; usuários que não são donos do anúncio recebem 403."""
+
+    def test_func(self):
+        return self.get_object().can_edit(self.request.user)
+
+
 class PostListView(ListView):
     model = Post
 
@@ -15,18 +22,27 @@ class PostListView(ListView):
 class PostDetailView(DetailView):
     model = Post
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['can_edit'] = self.object.can_edit(self.request.user)
+        return context
 
-class PostCreateView(CreateView):
+
+class PostCreateView(LoginRequiredMixin, CreateView):
+    model = Post
+    form_class = PostForm
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+
+class PostUpdateView(PostOwnerRequiredMixin, UpdateView):
     model = Post
     form_class = PostForm
 
 
-class PostUpdateView(UpdateView):
-    model = Post
-    form_class = PostForm
-
-
-class PostDeleteView(DeleteView):
+class PostDeleteView(PostOwnerRequiredMixin, DeleteView):
     model = Post
     success_url = reverse_lazy('blog:post_list')
 

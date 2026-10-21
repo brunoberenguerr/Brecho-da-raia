@@ -10,7 +10,10 @@ from .models import Category, Comment, Post
 
 class PostCrudTests(TestCase):
     def setUp(self):
-        self.post = Post.objects.create(title='Óculos Arena', content='<p>Seminovo</p>')
+        self.owner = get_user_model().objects.create_user('vendedor', password='senha-de-teste-123')
+        self.post = Post.objects.create(title='Óculos Arena', content='<p>Seminovo</p>',
+                                        author=self.owner)
+        self.client.force_login(self.owner)
 
     def test_list(self):
         response = self.client.get(reverse('blog:post_list'))
@@ -31,6 +34,7 @@ class PostCrudTests(TestCase):
         })
         post = Post.objects.get(title='Palmar Speedo')
         self.assertRedirects(response, reverse('blog:post_detail', args=[post.pk]))
+        self.assertEqual(post.author, self.owner)
 
     def test_create_invalid_shows_errors(self):
         response = self.client.post(reverse('blog:post_create'), {'title': '', 'content': ''})
@@ -51,6 +55,49 @@ class PostCrudTests(TestCase):
         self.assertTrue(Post.objects.filter(pk=self.post.pk).exists())
         response = self.client.post(url)
         self.assertRedirects(response, reverse('blog:post_list'))
+        self.assertFalse(Post.objects.filter(pk=self.post.pk).exists())
+
+
+class PostPermissionTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.owner = User.objects.create_user('dono', password='senha-de-teste-123')
+        self.other = User.objects.create_user('outro', password='senha-de-teste-123')
+        self.staff = User.objects.create_user('equipe', password='senha-de-teste-123',
+                                              is_staff=True)
+        self.post = Post.objects.create(title='Traje Arena', content='<p>Tam. 22</p>',
+                                        author=self.owner)
+        self.detail = reverse('blog:post_detail', args=[self.post.pk])
+        self.update = reverse('blog:post_update', args=[self.post.pk])
+        self.delete = reverse('blog:post_delete', args=[self.post.pk])
+
+    def test_visitor_does_not_see_buttons_and_is_sent_to_login(self):
+        self.assertNotContains(self.client.get(self.detail), self.update)
+        for url in (reverse('blog:post_create'), self.update, self.delete):
+            response = self.client.get(url)
+            self.assertRedirects(response, f"{reverse('login')}?next={url}")
+
+    def test_visitor_cannot_delete_with_post(self):
+        self.client.post(self.delete)
+        self.assertTrue(Post.objects.filter(pk=self.post.pk).exists())
+
+    def test_other_user_gets_403(self):
+        self.client.force_login(self.other)
+        self.assertNotContains(self.client.get(self.detail), self.update)
+        self.assertEqual(self.client.get(self.update).status_code, 403)
+        self.assertEqual(self.client.post(self.delete).status_code, 403)
+        self.assertTrue(Post.objects.filter(pk=self.post.pk).exists())
+
+    def test_owner_sees_buttons(self):
+        self.client.force_login(self.owner)
+        response = self.client.get(self.detail)
+        self.assertContains(response, self.update)
+        self.assertContains(response, self.delete)
+
+    def test_staff_can_edit_any_post(self):
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get(self.update).status_code, 200)
+        self.client.post(self.delete)
         self.assertFalse(Post.objects.filter(pk=self.post.pk).exists())
 
 

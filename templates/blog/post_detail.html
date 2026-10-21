@@ -6,7 +6,10 @@
 <article class="post">
   <p class="breadcrumb"><a href="{% url 'blog:post_list' %}">← Voltar aos anúncios</a></p>
   <h1>{{ post.title }}</h1>
-  <p class="meta">Publicado em {{ post.posted_at|date:"d \d\e F \d\e Y, \à\s H:i" }}</p>
+  <p class="meta">
+    {% if post.author %}Anunciado por <strong>{{ post.author.get_full_name|default:post.author.username }}</strong> · {% endif %}
+    Publicado em {{ post.posted_at|date:"d \d\e F \d\e Y, \à\s H:i" }}
+  </p>
 
   {% with categories=post.categories.all %}
   {% if categories %}
@@ -22,10 +25,12 @@
     {{ post.content|safe }}
   </div>
 
+  {% if can_edit %}
   <div class="actions">
     <a class="btn" href="{% url 'blog:post_update' post.pk %}">Editar anúncio</a>
     <a class="btn btn-danger" href="{% url 'blog:post_delete' post.pk %}">Remover anúncio</a>
   </div>
+  {% endif %}
 </article>
 
 <section class="comments" id="comentarios">

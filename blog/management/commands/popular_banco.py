@@ -32,6 +32,7 @@ POSTS = [
     {
         'title': 'Traje Speedo Fastskin LZR Pure Intent masculino – tam. 20',
         'posted_at': data(12, 19, 30),
+        'author': 'ana',
         'categories': ['Trajes'],
         'content': """<p>Traje de competição usado em apenas duas provas (estadual de inverno e um torneio
 universitário). Tecido ainda firme, costuras e silicone da cintura intactos, sem fios puxados.</p>
@@ -51,6 +52,7 @@ universitário). Tecido ainda firme, costuras e silicone da cintura intactos, se
     {
         'title': 'Óculos Arena Cobra Ultra Swipe espelhado prata',
         'posted_at': data(14, 10, 0),
+        'author': 'julia',
         'categories': ['Óculos'],
         'content': """<p>Óculos de prova com lente espelhada e tecnologia antiembaçante <em>Swipe</em>
 (é só passar o dedo na lente molhada). Vem com estojo original e as quatro pontes nasais.</p>
@@ -68,6 +70,7 @@ universitário). Tecido ainda firme, costuras e silicone da cintura intactos, se
     {
         'title': 'Kit treino: pé de pato Arena Powerfin Pro (40/41) + palmar Speedo Biofuse (M)',
         'posted_at': data(16, 15, 10),
+        'author': 'carlos',
         'categories': ['Pé de pato', 'Palmar'],
         'content': """<p>Kit completo para treino de força. Estou mudando de equipe e o técnico novo
 usa outro modelo de equipamento, então estou vendendo o que tenho.</p>
@@ -87,6 +90,7 @@ usa outro modelo de equipamento, então estou vendendo o que tenho.</p>
     {
         'title': 'Palmar Finis Agility (M) + óculos Speedo Vanquisher 2.0',
         'posted_at': data(18, 20, 45),
+        'author': 'rafael',
         'categories': ['Palmar', 'Óculos'],
         'content': """<p>Palmar sem tiras (o encaixe é só pelo polegar), ótimo para corrigir a pegada
 da braçada. Os óculos são de treino, lente fumê, perfeitos para piscina descoberta.</p>
@@ -128,11 +132,17 @@ class Command(BaseCommand):
             )
 
         for dados in POSTS:
+            autor = usuarios[dados['author']]
             post, criado = Post.objects.get_or_create(
                 title=dados['title'],
-                defaults={'content': dados['content'], 'posted_at': dados['posted_at']},
+                defaults={'content': dados['content'], 'posted_at': dados['posted_at'],
+                          'author': autor},
             )
             if not criado:
+                # bancos criados antes do campo autor existir
+                if post.author is None:
+                    post.author = autor
+                    post.save(update_fields=['author'])
                 continue
             post.categories.set(categorias[name] for name in dados['categories'])
             for username, text, posted_at in dados['comments']:

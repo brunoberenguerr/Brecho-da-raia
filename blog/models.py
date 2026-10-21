@@ -30,6 +30,10 @@ class Post(models.Model):
     categories = models.ManyToManyField(
         Category, related_name='posts', blank=True, verbose_name='categorias',
     )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posts',
+        null=True, blank=True, verbose_name='autor',
+    )
 
     class Meta:
         ordering = ['-posted_at']
@@ -39,6 +43,10 @@ class Post(models.Model):
 
     def get_absolute_url(self):
         return reverse('blog:post_detail', args=[self.pk])
+
+    def can_edit(self, user):
+        """Só o autor do anúncio ou a equipe do site (is_staff) podem editá-lo ou removê-lo."""
+        return user.is_staff or (user.is_authenticated and user == self.author)
 
 
 class Comment(models.Model):

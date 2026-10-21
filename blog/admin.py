@@ -10,8 +10,8 @@ class CommentInline(admin.TabularInline):
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'posted_at')
-    list_filter = ('categories',)
+    list_display = ('title', 'author', 'posted_at')
+    list_filter = ('categories', 'author')
     search_fields = ('title', 'content')
     filter_horizontal = ('categories',)
     inlines = [CommentInline]
