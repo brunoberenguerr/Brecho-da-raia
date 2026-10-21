@@ -28,6 +28,12 @@ class PostCrudTests(TestCase):
         post = Post.objects.get(title='Palmar Speedo')
         self.assertRedirects(response, reverse('blog:post_detail', args=[post.pk]))
 
+    def test_create_invalid_shows_errors(self):
+        response = self.client.post(reverse('blog:post_create'), {'title': '', 'content': ''})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'errorlist')
+        self.assertEqual(Post.objects.count(), 1)
+
     def test_update(self):
         url = reverse('blog:post_update', args=[self.post.pk])
         self.assertContains(self.client.get(url), 'Óculos Arena')
