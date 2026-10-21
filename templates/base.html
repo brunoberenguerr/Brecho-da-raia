@@ -1,0 +1,32 @@
+{% load static %}<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Brechó da Raia{% endblock %} · Brechó da Raia</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="{% url 'blog:post_list' %}">
+        <span class="brand-mark">≈</span> Brechó da Raia
+      </a>
+      <nav class="nav">
+        <a href="{% url 'blog:post_list' %}">Anúncios</a>
+        <a class="btn btn-small" href="{% url 'blog:post_create' %}">+ Anunciar</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      Brechó da Raia — compra e venda de material de natação usado: trajes, óculos, pés de pato e palmares.
+    </div>
+  </footer>
+</body>
+</html>

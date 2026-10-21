@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Remover anúncio{% endblock %}
+
+{% block content %}
+<section class="confirm">
+  <h1>Remover anúncio</h1>
+  <p>Tem certeza de que deseja remover o anúncio <strong>“{{ post.title }}”</strong>?
+     Esta ação não pode ser desfeita.</p>
+  <form method="post">
+    {% csrf_token %}
+    <div class="actions">
+      <button type="submit" class="btn btn-danger">Sim, remover</button>
+      <a class="btn btn-ghost" href="{% url 'blog:post_detail' post.pk %}">Cancelar</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

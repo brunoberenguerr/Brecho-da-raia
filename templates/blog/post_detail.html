@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<article class="post">
+  <p class="breadcrumb"><a href="{% url 'blog:post_list' %}">← Voltar aos anúncios</a></p>
+  <h1>{{ post.title }}</h1>
+  <p class="meta">Publicado em {{ post.posted_at|date:"d \d\e F \d\e Y, \à\s H:i" }}</p>
+
+  <div class="post-content">
+    {{ post.content|safe }}
+  </div>
+
+  <div class="actions">
+    <a class="btn" href="{% url 'blog:post_update' post.pk %}">Editar anúncio</a>
+    <a class="btn btn-danger" href="{% url 'blog:post_delete' post.pk %}">Remover anúncio</a>
+  </div>
+</article>
+{% endblock %}

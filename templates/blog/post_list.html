@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Anúncios{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <h1>Anúncios recentes</h1>
+  <p>Material de natação usado, revisado por quem já nadou com ele.</p>
+</section>
+
+{% if post_list %}
+<ul class="post-list">
+  {% for post in post_list %}
+  <li class="post-card">
+    <a href="{% url 'blog:post_detail' post.pk %}">{{ post.title }}</a>
+    <time datetime="{{ post.posted_at|date:'c' }}">{{ post.posted_at|date:"d/m/Y H:i" }}</time>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty">Nenhum anúncio por aqui ainda. <a href="{% url 'blog:post_create' %}">Seja o primeiro a anunciar!</a></p>
+{% endif %}
+{% endblock %}

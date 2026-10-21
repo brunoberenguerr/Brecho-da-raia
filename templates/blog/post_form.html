@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if post %}Editar anúncio{% else %}Novo anúncio{% endif %}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <h1>{% if post %}Editar anúncio{% else %}Novo anúncio{% endif %}</h1>
+  <p>Descreva o item: modelo, tamanho, estado de conservação e preço.</p>
+</section>
+
+<form method="post" class="form">
+  {% csrf_token %}
+  <div class="field">
+    <label for="id_title">Título</label>
+    <input type="text" id="id_title" name="title" value="{{ post.title }}">
+  </div>
+  <div class="field">
+    <label for="id_content">Conteúdo (HTML)</label>
+    <textarea id="id_content" name="content" rows="14">{{ post.content }}</textarea>
+  </div>
+  <div class="actions">
+    <button type="submit" class="btn">Salvar</button>
+    {% if post %}
+    <a class="btn btn-ghost" href="{% url 'blog:post_detail' post.pk %}">Cancelar</a>
+    {% else %}
+    <a class="btn btn-ghost" href="{% url 'blog:post_list' %}">Cancelar</a>
+    {% endif %}
+  </div>
+</form>
+{% endblock %}
