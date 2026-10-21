@@ -1,10 +1,11 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from .forms import PostForm
-from .models import Comment, Post
+from .models import Category, Comment, Post
 
 
 class PostListView(ListView):
@@ -49,3 +50,17 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse('blog:post_detail', args=[self.kwargs['pk']]) + '#comentarios'
+
+
+class CategoryListView(ListView):
+    queryset = Category.objects.annotate(num_posts=Count('posts'))
+
+
+class CategoryDetailView(DetailView):
+    model = Category
+    template_name = 'blog/post_list.html'  # reutiliza o template de listagem de posts
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['post_list'] = self.object.posts.all()
+        return context

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Categorias{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <h1>Categorias</h1>
+  <p>Encontre o que você procura pelo tipo de equipamento.</p>
+</section>
+
+{% if category_list %}
+<ul class="category-list">
+  {% for category in category_list %}
+  <li>
+    <a href="{% url 'blog:category_detail' category.pk %}">{{ category.name }}</a>
+    <span class="count">· {{ category.num_posts }} anúncio{{ category.num_posts|pluralize }}</span>
+    <p>{{ category.description }}</p>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty">Nenhuma categoria cadastrada.</p>
+{% endif %}
+{% endblock %}

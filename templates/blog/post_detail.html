@@ -8,6 +8,16 @@
   <h1>{{ post.title }}</h1>
   <p class="meta">Publicado em {{ post.posted_at|date:"d \d\e F \d\e Y, \à\s H:i" }}</p>
 
+  {% with categories=post.categories.all %}
+  {% if categories %}
+  <ul class="tags" aria-label="Categorias">
+    {% for category in categories %}
+    <li><a href="{% url 'blog:category_detail' category.pk %}">{{ category.name }}</a></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endwith %}
+
   <div class="post-content">
     {{ post.content|safe }}
   </div>

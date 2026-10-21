@@ -1,11 +1,17 @@
 {% extends 'base.html' %}
 
-{% block title %}Anúncios{% endblock %}
+{% block title %}{% if category %}{{ category.name }}{% else %}Anúncios{% endif %}{% endblock %}
 
 {% block content %}
 <section class="page-head">
+  {% if category %}
+  <p class="breadcrumb"><a href="{% url 'blog:category_list' %}">← Todas as categorias</a></p>
+  <h1>Categoria: {{ category.name }}</h1>
+  <p>{{ category.description }}</p>
+  {% else %}
   <h1>Anúncios recentes</h1>
   <p>Material de natação usado, revisado por quem já nadou com ele.</p>
+  {% endif %}
 </section>
 
 {% if post_list %}
