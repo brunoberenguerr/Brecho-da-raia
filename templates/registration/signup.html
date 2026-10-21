@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Criar conta{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <h1>Criar conta</h1>
+  <p>Com uma conta você pode anunciar seus itens e fazer perguntas e propostas nos anúncios.</p>
+</section>
+
+<form method="post" class="form">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {% for field in form %}
+  <div class="field">
+    {{ field.label_tag }}
+    {{ field }}
+    {% if field.help_text %}<div class="help">{{ field.help_text|safe }}</div>{% endif %}
+    {{ field.errors }}
+  </div>
+  {% endfor %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <div class="actions">
+    <button type="submit" class="btn">Criar conta</button>
+    <span>Já tem conta? <a href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Entrar</a></span>
+  </div>
+</form>
+{% endblock %}

@@ -4,8 +4,11 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.static import serve
 
+from blog.views import SignUpView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('contas/cadastro/', SignUpView.as_view(), name='signup'),
     path('contas/', include('django.contrib.auth.urls')),
     path('', include('blog.urls')),
 ]

@@ -1,4 +1,6 @@
 from django import forms
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UserCreationForm
 from django.db.models import Case, IntegerField, Value, When
 
 from .formatting import html_to_text, text_to_html
@@ -69,3 +71,14 @@ class PostForm(forms.ModelForm):
     def save(self, commit=True):
         self.instance.content = text_to_html(self.cleaned_data['description'])
         return super().save(commit)
+
+
+class SignUpForm(UserCreationForm):
+    """Cadastro de usuário: o nome é o que aparece nos anúncios e comentários."""
+
+    first_name = forms.CharField(label='Nome', max_length=150)
+
+    class Meta(UserCreationForm.Meta):
+        model = get_user_model()
+        fields = ['username', 'first_name', 'last_name', 'email']
+        labels = {'last_name': 'Sobrenome', 'email': 'E-mail (opcional)'}

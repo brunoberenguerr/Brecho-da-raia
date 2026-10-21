@@ -1,10 +1,12 @@
+from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from .forms import PostForm
+from .forms import PostForm, SignUpForm
 from .models import Category, Comment, Post
 
 
@@ -80,3 +82,27 @@ class CategoryDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context['post_list'] = self.object.posts.all()
         return context
+
+
+class SignUpView(CreateView):
+    form_class = SignUpForm
+    template_name = 'registration/signup.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('blog:post_list')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['next'] = self.request.POST.get('next') or self.request.GET.get('next', '')
+        return context
+
+    def form_valid(self, form):
+        user = form.save()
+        login(self.request, user)  # já entra logado depois de criar a conta
+        next_url = self.request.POST.get('next', '')
+        if url_has_allowed_host_and_scheme(next_url, allowed_hosts={self.request.get_host()},
+                                           require_https=self.request.is_secure()):
+            return redirect(next_url)
+        return redirect('blog:post_list')

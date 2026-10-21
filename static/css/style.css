@@ -108,7 +108,10 @@ main.container { padding: 28px 20px 48px; flex: 1; width: 100%; }
 .field { margin-bottom: 16px; }
 .field label { display: block; font-weight: 600; margin-bottom: 6px; }
 .field input[type=file] { font: inherit; }
-.field input[type=text], .field input[type=password], .field textarea, .field select {
+.field .help { color: var(--cinza); font-size: .85rem; margin-top: 4px; }
+.field .help ul { display: block; list-style: disc; padding-left: 18px; margin: 2px 0 0; }
+.field .errorlist { display: block; }
+.field input[type=text], .field input[type=password], .field input[type=email], .field textarea, .field select {
   width: 100%; padding: 9px 11px; border: 1px solid #b9cfdc; border-radius: 6px; font: inherit; background: #fff;
 }
 .field textarea { line-height: 1.5; }

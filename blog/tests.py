@@ -307,3 +307,59 @@ class OtherCategoryTests(TestCase):
         post.refresh_from_db()
         self.assertEqual(post.other_category, '')
         self.assertEqual(list(post.categories.all()), [self.trajes])
+
+
+class SignUpTests(TestCase):
+    PASSWORD = 'Raia#natacao2026'
+
+    def data(self, **extra):
+        return {'username': 'marina', 'first_name': 'Marina', 'last_name': 'Costa',
+                'email': '', 'password1': self.PASSWORD, 'password2': self.PASSWORD, **extra}
+
+    def test_header_and_login_page_link_to_signup(self):
+        self.assertContains(self.client.get(reverse('blog:post_list')), reverse('signup'))
+        self.assertContains(self.client.get(reverse('login')), reverse('signup'))
+
+    def test_signup_creates_regular_user_and_logs_in(self):
+        response = self.client.post(reverse('signup'), self.data())
+        self.assertRedirects(response, reverse('blog:post_list'))
+        user = get_user_model().objects.get(username='marina')
+        self.assertEqual(user.get_full_name(), 'Marina Costa')
+        self.assertFalse(user.is_staff)
+        self.assertTrue(user.check_password(self.PASSWORD))
+        self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
+
+    def test_signup_returns_to_next(self):
+        post = Post.objects.create(title='Óculos', content='<p>x</p>')
+        target = reverse('blog:comment_create', args=[post.pk])
+        response = self.client.post(reverse('signup'), self.data(next=target))
+        self.assertRedirects(response, target)
+
+    def test_signup_ignores_external_next(self):
+        response = self.client.post(reverse('signup'), self.data(next='https://malicioso.com/'))
+        self.assertRedirects(response, reverse('blog:post_list'))
+
+    def test_name_is_required(self):
+        response = self.client.post(reverse('signup'), self.data(first_name=''))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(get_user_model().objects.exists())
+
+    def test_password_confirmation_must_match(self):
+        response = self.client.post(reverse('signup'), self.data(password2='Outra#senha2026'))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(get_user_model().objects.exists())
+
+    def test_weak_password_is_rejected(self):
+        response = self.client.post(reverse('signup'), self.data(password1='123', password2='123'))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(get_user_model().objects.exists())
+
+    def test_duplicate_username_is_rejected(self):
+        get_user_model().objects.create_user('marina')
+        response = self.client.post(reverse('signup'), self.data())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(get_user_model().objects.count(), 1)
+
+    def test_logged_user_is_redirected_away(self):
+        self.client.force_login(get_user_model().objects.create_user('ana'))
+        self.assertRedirects(self.client.get(reverse('signup')), reverse('blog:post_list'))

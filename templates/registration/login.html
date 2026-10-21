@@ -5,7 +5,7 @@
 {% block content %}
 <section class="page-head">
   <h1>Entrar</h1>
-  <p>Use a conta criada pelo administrador do Brechó da Raia.</p>
+  <p>Entre com sua conta do Brechó da Raia.</p>
 </section>
 
 <form method="post" class="form">
@@ -22,6 +22,7 @@
   <input type="hidden" name="next" value="{{ next }}">
   <div class="actions">
     <button type="submit" class="btn">Entrar</button>
+    <span>Ainda não tem conta? <a href="{% url 'signup' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Criar conta</a></span>
   </div>
 </form>
 {% endblock %}
