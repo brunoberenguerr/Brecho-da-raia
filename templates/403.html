@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Acesso negado{% endblock %}
+
+{% block content %}
+<section class="confirm">
+  <h1>Acesso negado</h1>
+  <p>Só quem criou o anúncio (ou a equipe do Brechó da Raia) pode editá-lo ou removê-lo.</p>
+  <div class="actions">
+    <a class="btn btn-ghost" href="{% url 'blog:post_list' %}">Voltar aos anúncios</a>
+  </div>
+</section>
+{% endblock %}

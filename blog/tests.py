@@ -84,7 +84,9 @@ class PostPermissionTests(TestCase):
     def test_other_user_gets_403(self):
         self.client.force_login(self.other)
         self.assertNotContains(self.client.get(self.detail), self.update)
-        self.assertEqual(self.client.get(self.update).status_code, 403)
+        response = self.client.get(self.update)
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Acesso negado', status_code=403)
         self.assertEqual(self.client.post(self.delete).status_code, 403)
         self.assertTrue(Post.objects.filter(pk=self.post.pk).exists())
 
