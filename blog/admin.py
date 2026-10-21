@@ -1,9 +1,21 @@
 from django.contrib import admin
 
-from .models import Post
+from .models import Comment, Post
+
+
+class CommentInline(admin.TabularInline):
+    model = Comment
+    extra = 0
 
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     list_display = ('title', 'posted_at')
     search_fields = ('title', 'content')
+    inlines = [CommentInline]
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('post', 'author', 'posted_at')
+    list_filter = ('author',)

@@ -15,6 +15,15 @@
       <nav class="nav">
         <a href="{% url 'blog:post_list' %}">Anúncios</a>
         <a class="btn btn-small" href="{% url 'blog:post_create' %}">+ Anunciar</a>
+        {% if user.is_authenticated %}
+        <span class="user">Olá, {{ user.first_name|default:user.username }}</span>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="link-button">Sair</button>
+        </form>
+        {% else %}
+        <a href="{% url 'login' %}">Entrar</a>
+        {% endif %}
       </nav>
     </div>
   </header>

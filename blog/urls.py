@@ -10,4 +10,5 @@ urlpatterns = [
     path('anuncios/<int:pk>/', views.PostDetailView.as_view(), name='post_detail'),
     path('anuncios/<int:pk>/editar/', views.PostUpdateView.as_view(), name='post_update'),
     path('anuncios/<int:pk>/remover/', views.PostDeleteView.as_view(), name='post_delete'),
+    path('anuncios/<int:pk>/comentar/', views.CommentCreateView.as_view(), name='comment_create'),
 ]
