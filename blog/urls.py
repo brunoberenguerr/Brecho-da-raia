@@ -5,9 +5,9 @@ from . import views
 app_name = 'blog'
 
 urlpatterns = [
-    path('', views.post_list, name='post_list'),
-    path('anuncios/novo/', views.post_create, name='post_create'),
-    path('anuncios/<int:pk>/', views.post_detail, name='post_detail'),
-    path('anuncios/<int:pk>/editar/', views.post_update, name='post_update'),
-    path('anuncios/<int:pk>/remover/', views.post_delete, name='post_delete'),
+    path('', views.PostListView.as_view(), name='post_list'),
+    path('anuncios/novo/', views.PostCreateView.as_view(), name='post_create'),
+    path('anuncios/<int:pk>/', views.PostDetailView.as_view(), name='post_detail'),
+    path('anuncios/<int:pk>/editar/', views.PostUpdateView.as_view(), name='post_update'),
+    path('anuncios/<int:pk>/remover/', views.PostDeleteView.as_view(), name='post_delete'),
 ]
