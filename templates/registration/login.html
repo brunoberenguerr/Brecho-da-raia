@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Entrar{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <h1>Entrar</h1>
+  <p>Use a conta criada pelo administrador do Brechó da Raia.</p>
+</section>
+
+<form method="post" class="form">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="field">
+    <label for="{{ form.username.id_for_label }}">Usuário</label>
+    {{ form.username }}
+  </div>
+  <div class="field">
+    <label for="{{ form.password.id_for_label }}">Senha</label>
+    {{ form.password }}
+  </div>
+  <input type="hidden" name="next" value="{{ next }}">
+  <div class="actions">
+    <button type="submit" class="btn">Entrar</button>
+  </div>
+</form>
+{% endblock %}

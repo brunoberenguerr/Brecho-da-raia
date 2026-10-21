@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Comentar em {{ post.title }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <p class="breadcrumb"><a href="{% url 'blog:post_detail' post.pk %}">← Voltar ao anúncio</a></p>
+  <h1>Novo comentário</h1>
+  <p>Anúncio: <strong>{{ post.title }}</strong></p>
+</section>
+
+<form method="post" class="form">
+  {% csrf_token %}
+  <p>Comentando como <strong>{{ user.get_full_name|default:user.username }}</strong></p>
+  {{ form.non_field_errors }}
+  <div class="field">
+    <label for="{{ form.text.id_for_label }}">Pergunta ou proposta</label>
+    {{ form.text }}
+    {{ form.text.errors }}
+  </div>
+  <div class="actions">
+    <button type="submit" class="btn">Enviar comentário</button>
+    <a class="btn btn-ghost" href="{% url 'blog:post_detail' post.pk %}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}
