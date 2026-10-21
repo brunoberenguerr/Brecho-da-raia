@@ -4,12 +4,32 @@ from django.urls import reverse
 from django.utils import timezone
 
 
+class Category(models.Model):
+    """Tipo de item anunciado (trajes, óculos, pés de pato, palmares...)."""
+
+    name = models.CharField('nome', max_length=100)
+    description = models.TextField('descrição')
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'categoria'
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('blog:category_detail', args=[self.pk])
+
+
 class Post(models.Model):
     """Anúncio de um item de natação usado."""
 
     title = models.CharField('título', max_length=200)
     content = models.TextField('conteúdo (HTML)')
     posted_at = models.DateTimeField('data de postagem', default=timezone.now)
+    categories = models.ManyToManyField(
+        Category, related_name='posts', blank=True, verbose_name='categorias',
+    )
 
     class Meta:
         ordering = ['-posted_at']

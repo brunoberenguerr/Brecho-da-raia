@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Comment, Post
+from .models import Category, Comment, Post
 
 
 class PostCrudTests(TestCase):
@@ -91,3 +91,37 @@ class CommentTests(TestCase):
         response = self.client.get(reverse('blog:post_detail', args=[self.post.pk]))
         content = response.content.decode()
         self.assertLess(content.index('segundo'), content.index('primeiro'))
+
+
+class CategoryTests(TestCase):
+    def setUp(self):
+        self.oculos = Category.objects.create(name='Óculos', description='Óculos de natação')
+        self.palmar = Category.objects.create(name='Palmar', description='Palmares de treino')
+        self.post = Post.objects.create(title='Óculos Speedo', content='<p>Lente fumê</p>')
+        self.post.categories.add(self.oculos)
+        self.other = Post.objects.create(title='Palmar Finis', content='<p>Tam. M</p>')
+        self.other.categories.add(self.palmar)
+
+    def test_category_list(self):
+        response = self.client.get(reverse('blog:category_list'))
+        self.assertContains(response, reverse('blog:category_detail', args=[self.oculos.pk]))
+        self.assertContains(response, 'Palmares de treino')
+
+    def test_category_detail_lists_only_its_posts(self):
+        response = self.client.get(reverse('blog:category_detail', args=[self.oculos.pk]))
+        self.assertTemplateUsed(response, 'blog/post_list.html')
+        self.assertContains(response, 'Categoria: Óculos')
+        self.assertContains(response, 'Óculos Speedo')
+        self.assertNotContains(response, 'Palmar Finis')
+
+    def test_category_detail_404(self):
+        response = self.client.get(reverse('blog:category_detail', args=[9999]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_post_detail_links_categories(self):
+        response = self.client.get(reverse('blog:post_detail', args=[self.post.pk]))
+        self.assertContains(response, reverse('blog:category_detail', args=[self.oculos.pk]))
+
+    def test_header_links_category_list(self):
+        response = self.client.get(reverse('blog:post_list'))
+        self.assertContains(response, reverse('blog:category_list'))

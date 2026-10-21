@@ -14,6 +14,7 @@
       </a>
       <nav class="nav">
         <a href="{% url 'blog:post_list' %}">Anúncios</a>
+        <a href="{% url 'blog:category_list' %}">Categorias</a>
         <a class="btn btn-small" href="{% url 'blog:post_create' %}">+ Anunciar</a>
         {% if user.is_authenticated %}
         <span class="user">Olá, {{ user.first_name|default:user.username }}</span>
