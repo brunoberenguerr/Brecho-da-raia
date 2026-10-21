@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -27,6 +28,12 @@ class Category(models.Model):
 class Post(models.Model):
     """Anúncio de um item de natação usado."""
 
+    CONDITION_CHOICES = [
+        ('novo', 'Novo (nunca usado)'),
+        ('seminovo', 'Seminovo'),
+        ('usado', 'Usado'),
+    ]
+
     title = models.CharField('título', max_length=200)
     content = models.TextField('conteúdo (HTML)')
     posted_at = models.DateTimeField('data de postagem', default=timezone.now)
@@ -40,6 +47,12 @@ class Post(models.Model):
     photo = models.ImageField('foto', upload_to='anuncios/', blank=True)
     # Descreve o item quando o anúncio está na categoria "Outro" (ex.: touca, snorkel)
     other_category = models.CharField('outra categoria', max_length=60, blank=True)
+    # Opcionais no banco para não invalidar anúncios antigos; o formulário os exige
+    price = models.DecimalField('preço (R$)', max_digits=8, decimal_places=2, null=True, blank=True,
+                                validators=[MinValueValidator(0)])
+    condition = models.CharField('estado', max_length=10, choices=CONDITION_CHOICES, blank=True)
+    size = models.CharField('tamanho', max_length=30, blank=True)
+    is_sold = models.BooleanField('vendido', default=False)
 
     class Meta:
         ordering = ['-posted_at']

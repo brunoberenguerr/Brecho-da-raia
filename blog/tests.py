@@ -2,6 +2,7 @@ import io
 import shutil
 import tempfile
 from datetime import timedelta
+from decimal import Decimal
 from unittest import mock
 
 from django.contrib.auth import get_user_model
@@ -14,6 +15,9 @@ from PIL import Image
 from .formatting import html_to_text, text_to_html
 from .forms import PostForm
 from .models import Category, Comment, Post
+
+# Campos obrigatórios do formulário de anúncio que não importam para cada teste
+ITEM = {'price': '100.00', 'condition': 'usado'}
 
 
 class PostCrudTests(TestCase):
@@ -38,7 +42,7 @@ class PostCrudTests(TestCase):
 
     def test_create(self):
         response = self.client.post(reverse('blog:post_create'), {
-            'title': 'Palmar Speedo', 'description': 'Tamanho M.\nPouco uso.\n\n- Tiras novas',
+            'title': 'Palmar Speedo', 'description': 'Tamanho M.\nPouco uso.\n\n- Tiras novas', **ITEM,
         })
         post = Post.objects.get(title='Palmar Speedo')
         self.assertRedirects(response, reverse('blog:post_detail', args=[post.pk]))
@@ -47,7 +51,7 @@ class PostCrudTests(TestCase):
 
     def test_create_escapes_typed_html(self):
         self.client.post(reverse('blog:post_create'), {
-            'title': 'Touca', 'description': '<script>alert(1)</script>',
+            'title': 'Touca', 'description': '<script>alert(1)</script>', **ITEM,
         })
         post = Post.objects.get(title='Touca')
         self.assertEqual(post.content, '<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>')
@@ -64,7 +68,7 @@ class PostCrudTests(TestCase):
         self.assertContains(response, 'Óculos Arena')
         # o HTML salvo volta como texto simples no formulário
         self.assertContains(response, 'Seminovo</textarea>')
-        self.client.post(url, {'title': 'Óculos Arena Cobra', 'description': 'Novo'})
+        self.client.post(url, {'title': 'Óculos Arena Cobra', 'description': 'Novo', **ITEM})
         self.post.refresh_from_db()
         self.assertEqual(self.post.title, 'Óculos Arena Cobra')
         self.assertEqual(self.post.content, '<p>Novo</p>')
@@ -239,7 +243,7 @@ class PhotoUploadTests(TestCase):
         self.client.force_login(self.user)
 
     def create(self, **extra):
-        data = {'title': 'Pé de pato', 'description': 'Tam. 40', **extra}
+        data = {'title': 'Pé de pato', 'description': 'Tam. 40', **ITEM, **extra}
         return self.client.post(reverse('blog:post_create'), data)
 
     def test_upload_photo_shows_on_detail_and_list(self):
@@ -274,7 +278,7 @@ class OtherCategoryTests(TestCase):
         self.trajes = Category.objects.create(name='Trajes', description='Trajes')
 
     def create(self, **extra):
-        data = {'title': 'Touca Arena', 'description': 'Silicone', **extra}
+        data = {'title': 'Touca Arena', 'description': 'Silicone', **ITEM, **extra}
         return self.client.post(reverse('blog:post_create'), data)
 
     def test_other_is_listed_last_in_form(self):
@@ -302,7 +306,7 @@ class OtherCategoryTests(TestCase):
         self.create(categories=[self.other.pk], other_category='Touca')
         post = Post.objects.get()
         self.client.post(reverse('blog:post_update', args=[post.pk]), {
-            'title': post.title, 'description': 'Silicone', 'categories': [self.trajes.pk],
+            'title': post.title, 'description': 'Silicone', 'categories': [self.trajes.pk], **ITEM,
         })
         post.refresh_from_db()
         self.assertEqual(post.other_category, '')
@@ -363,3 +367,99 @@ class SignUpTests(TestCase):
     def test_logged_user_is_redirected_away(self):
         self.client.force_login(get_user_model().objects.create_user('ana'))
         self.assertRedirects(self.client.get(reverse('signup')), reverse('blog:post_list'))
+
+
+class ItemDetailsTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.owner = User.objects.create_user('dono', first_name='Ana', last_name='Souza')
+        self.other = User.objects.create_user('outro')
+        self.post = Post.objects.create(title='Traje Speedo', content='<p>x</p>', author=self.owner,
+                                        price=Decimal('1500.00'), condition='seminovo', size='20')
+        self.toggle = reverse('blog:post_toggle_sold', args=[self.post.pk])
+
+    def test_price_and_condition_are_required(self):
+        self.client.force_login(self.owner)
+        response = self.client.post(reverse('blog:post_create'), {'title': 'Touca', 'description': 'x'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(set(response.context['form'].errors), {'price', 'condition'})
+
+    def test_negative_price_is_rejected(self):
+        self.client.force_login(self.owner)
+        response = self.client.post(reverse('blog:post_create'), {
+            'title': 'Touca', 'description': 'x', 'price': '-1', 'condition': 'novo'})
+        self.assertIn('price', response.context['form'].errors)
+
+    def test_list_and_detail_show_item_facts(self):
+        for url in (reverse('blog:post_list'), self.post.get_absolute_url()):
+            response = self.client.get(url)
+            self.assertContains(response, 'R$ 1.500,00')
+            self.assertContains(response, 'Seminovo')
+
+    def test_owner_marks_as_sold_and_reopens(self):
+        self.client.force_login(self.owner)
+        self.assertContains(self.client.get(self.post.get_absolute_url()), 'Marcar como vendido')
+        self.assertRedirects(self.client.post(self.toggle), self.post.get_absolute_url())
+        self.post.refresh_from_db()
+        self.assertTrue(self.post.is_sold)
+        self.assertContains(self.client.get(self.post.get_absolute_url()), 'Este item já foi vendido.')
+        self.client.post(self.toggle)
+        self.post.refresh_from_db()
+        self.assertFalse(self.post.is_sold)
+
+    def test_only_owner_can_mark_as_sold(self):
+        response = self.client.post(self.toggle)
+        self.assertRedirects(response, f"{reverse('login')}?next={self.toggle}")
+        self.client.force_login(self.other)
+        self.assertEqual(self.client.post(self.toggle).status_code, 403)
+        self.client.force_login(self.owner)
+        self.assertEqual(self.client.get(self.toggle).status_code, 405)
+        self.post.refresh_from_db()
+        self.assertFalse(self.post.is_sold)
+
+    def test_sold_posts_go_last(self):
+        newer = Post.objects.create(title='Óculos novos', content='<p>x</p>', author=self.owner,
+                                    is_sold=True)
+        response = self.client.get(reverse('blog:post_list'))
+        self.assertEqual(list(response.context['post_list']), [self.post, newer])
+        self.assertContains(response, 'Vendido')
+
+
+class SellerPagesTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.ana = User.objects.create_user('ana', first_name='Ana', last_name='Souza')
+        self.carlos = User.objects.create_user('carlos')
+        self.ana_post = Post.objects.create(title='Traje da Ana', content='<p>x</p>', author=self.ana)
+        self.carlos_post = Post.objects.create(title='Kit do Carlos', content='<p>x</p>',
+                                               author=self.carlos)
+        self.seller_url = reverse('blog:seller_detail', args=['ana'])
+
+    def test_my_posts_requires_login(self):
+        url = reverse('blog:my_posts')
+        self.assertRedirects(self.client.get(url), f"{reverse('login')}?next={url}")
+
+    def test_my_posts_lists_only_own_posts(self):
+        self.client.force_login(self.ana)
+        response = self.client.get(reverse('blog:my_posts'))
+        self.assertContains(response, 'Meus anúncios')
+        self.assertEqual(list(response.context['post_list']), [self.ana_post])
+
+    def test_header_links_to_my_posts_when_logged_in(self):
+        self.assertNotContains(self.client.get(reverse('blog:post_list')), reverse('blog:my_posts'))
+        self.client.force_login(self.ana)
+        self.assertContains(self.client.get(reverse('blog:post_list')), reverse('blog:my_posts'))
+
+    def test_seller_page(self):
+        response = self.client.get(self.seller_url)
+        self.assertContains(response, 'Anúncios de Ana Souza')
+        self.assertEqual(list(response.context['post_list']), [self.ana_post])
+        # "user" no template continua sendo o visitante, não o vendedor
+        self.assertContains(response, reverse('login'))
+
+    def test_post_detail_links_to_seller(self):
+        self.assertContains(self.client.get(self.ana_post.get_absolute_url()), self.seller_url)
+
+    def test_unknown_seller_404(self):
+        response = self.client.get(reverse('blog:seller_detail', args=['ninguem']))
+        self.assertEqual(response.status_code, 404)

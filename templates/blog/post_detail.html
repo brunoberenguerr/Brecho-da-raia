@@ -7,7 +7,7 @@
   <p class="breadcrumb"><a href="{% url 'blog:post_list' %}">← Voltar aos anúncios</a></p>
   <h1>{{ post.title }}</h1>
   <p class="meta">
-    {% if post.author %}Anunciado por <strong>{{ post.author.get_full_name|default:post.author.username }}</strong> · {% endif %}
+    {% if post.author %}Anunciado por <a href="{% url 'blog:seller_detail' post.author.username %}"><strong>{{ post.author.get_full_name|default:post.author.username }}</strong></a> · {% endif %}
     Publicado em {{ post.posted_at|date:"d \d\e F \d\e Y, \à\s H:i" }}
   </p>
 
@@ -20,6 +20,18 @@
   </ul>
   {% endif %}
   {% endwith %}
+
+  {% if post.is_sold %}
+  <p class="sold-banner">Este item já foi vendido.</p>
+  {% endif %}
+
+  {% if post.price is not None or post.condition or post.size %}
+  <dl class="item-facts">
+    {% if post.price is not None %}<div><dt>Preço</dt><dd class="fact-price">R$ {{ post.price|floatformat:"2g" }}</dd></div>{% endif %}
+    {% if post.condition %}<div><dt>Estado</dt><dd>{{ post.get_condition_display }}</dd></div>{% endif %}
+    {% if post.size %}<div><dt>Tamanho</dt><dd>{{ post.size }}</dd></div>{% endif %}
+  </dl>
+  {% endif %}
 
   {% if post.photo %}
   <figure class="post-photo">
@@ -34,6 +46,10 @@
   {% if can_edit %}
   <div class="actions">
     <a class="btn" href="{% url 'blog:post_update' post.pk %}">Editar anúncio</a>
+    <form method="post" action="{% url 'blog:post_toggle_sold' post.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-ghost">{% if post.is_sold %}Reabrir anúncio{% else %}Marcar como vendido{% endif %}</button>
+    </form>
     <a class="btn btn-danger" href="{% url 'blog:post_delete' post.pk %}">Remover anúncio</a>
   </div>
   {% endif %}

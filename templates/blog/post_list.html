@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if category %}{{ category.name }}{% else %}Anúncios{% endif %}{% endblock %}
+{% block title %}{% if category %}{{ category.name }}{% elif seller %}Anúncios de {{ seller.get_full_name|default:seller.username }}{% elif my_posts %}Meus anúncios{% else %}Anúncios{% endif %}{% endblock %}
 
 {% block content %}
 <section class="page-head">
@@ -8,6 +8,13 @@
   <p class="breadcrumb"><a href="{% url 'blog:category_list' %}">← Todas as categorias</a></p>
   <h1>Categoria: {{ category.name }}</h1>
   <p>{{ category.description }}</p>
+  {% elif seller %}
+  <p class="breadcrumb"><a href="{% url 'blog:post_list' %}">← Todos os anúncios</a></p>
+  <h1>Anúncios de {{ seller.get_full_name|default:seller.username }}</h1>
+  <p>No Brechó da Raia desde {{ seller.date_joined|date:"F \d\e Y"|lower }}.</p>
+  {% elif my_posts %}
+  <h1>Meus anúncios</h1>
+  <p>Edite, marque como vendido ou remova os itens que você anunciou.</p>
   {% else %}
   <h1>Anúncios recentes</h1>
   <p>Material de natação usado, revisado por quem já nadou com ele.</p>
@@ -17,13 +24,23 @@
 {% if post_list %}
 <ul class="post-list">
   {% for post in post_list %}
-  <li class="post-card">
+  <li class="post-card{% if post.is_sold %} sold{% endif %}">
     {% if post.photo %}<img class="thumb" src="{{ post.photo.url }}" alt="">{% endif %}
-    <a href="{% url 'blog:post_detail' post.pk %}">{{ post.title }}</a>
+    <div class="card-body">
+      <a href="{% url 'blog:post_detail' post.pk %}">{{ post.title }}</a>
+      <div class="card-meta">
+        {% if post.is_sold %}<span class="badge-sold">Vendido</span>{% endif %}
+        {% if post.price is not None %}<span class="card-price">R$ {{ post.price|floatformat:"2g" }}</span>{% endif %}
+        {% if post.condition %}<span>{{ post.get_condition_display }}</span>{% endif %}
+        {% if post.size %}<span>Tam. {{ post.size }}</span>{% endif %}
+      </div>
+    </div>
     <time datetime="{{ post.posted_at|date:'c' }}">{{ post.posted_at|date:"d/m/Y H:i" }}</time>
   </li>
   {% endfor %}
 </ul>
+{% elif my_posts %}
+<p class="empty">Você ainda não anunciou nada. <a href="{% url 'blog:post_create' %}">Anunciar um item</a></p>
 {% else %}
 <p class="empty">Nenhum anúncio por aqui ainda. <a href="{% url 'blog:post_create' %}">Seja o primeiro a anunciar!</a></p>
 {% endif %}

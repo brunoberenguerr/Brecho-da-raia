@@ -21,13 +21,17 @@ class PostForm(forms.ModelForm):
 
     class Meta:
         model = Post
-        fields = ['title', 'description', 'photo', 'categories', 'other_category']
+        fields = ['title', 'price', 'condition', 'size', 'description', 'photo', 'categories',
+                  'other_category']
         widgets = {
+            'price': forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'placeholder': 'Ex.: 150'}),
+            'size': forms.TextInput(attrs={'placeholder': 'Ex.: P, M, 40/41, tamanho único'}),
             'photo': forms.ClearableFileInput(attrs={'accept': 'image/*'}),
             'categories': forms.CheckboxSelectMultiple,
             'other_category': forms.TextInput(attrs={'placeholder': 'Ex.: touca, snorkel, pull buoy'}),
         }
         labels = {
+            'size': 'Tamanho (opcional)',
             'other_category': 'Qual outra categoria?',
         }
         help_texts = {
@@ -36,6 +40,10 @@ class PostForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # No banco são opcionais por causa dos anúncios antigos; todo anúncio novo deve tê-los
+        self.fields['price'].required = True
+        self.fields['condition'].required = True
+        self.fields['condition'].choices = [('', 'Selecione...')] + Post.CONDITION_CHOICES
         if self.instance.pk:
             self.initial.setdefault('description', html_to_text(self.instance.content))
         # "Outro" sempre por último na lista de categorias

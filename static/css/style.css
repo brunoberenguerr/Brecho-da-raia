@@ -58,7 +58,20 @@ main.container { padding: 28px 20px 48px; flex: 1; width: 100%; }
   border-radius: 8px; padding: 14px 18px;
   display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
 }
-.post-card a { flex: 1; font-weight: 600; font-size: 1.08rem; text-decoration: none; }
+.post-card .card-body { flex: 1; min-width: 0; }
+.post-card a { font-weight: 600; font-size: 1.08rem; text-decoration: none; }
+.card-meta { display: flex; gap: 6px 14px; flex-wrap: wrap; align-items: center; margin-top: 2px; color: var(--cinza); font-size: .92rem; }
+.card-price { color: #1e7d4f; font-weight: 700; }
+.badge-sold { background: var(--perigo); color: #fff; border-radius: 4px; padding: 0 8px; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+.post-card.sold { opacity: .65; border-left-color: var(--cinza); }
+
+/* Ficha do item na página do anúncio */
+.item-facts { display: flex; flex-wrap: wrap; gap: 10px 36px; margin: 0 0 18px; padding: 12px 18px; background: #fff; border: 1px solid var(--borda); border-radius: 8px; }
+.item-facts dt { color: var(--cinza); font-size: .85rem; }
+.item-facts dd { margin: 0; font-weight: 600; }
+.item-facts .fact-price { color: #1e7d4f; font-size: 1.35rem; font-weight: 700; }
+.sold-banner { margin: 0 0 14px; padding: 10px 16px; border-radius: 8px; background: #fbe9e7; border: 1px solid #f1c6c0; color: var(--perigo); font-weight: 700; }
+.actions form { margin: 0; }
 .post-card .thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--borda); }
 .post-card a:hover { text-decoration: underline; }
 .post-card time { color: var(--cinza); font-size: .9rem; white-space: nowrap; }
@@ -111,7 +124,7 @@ main.container { padding: 28px 20px 48px; flex: 1; width: 100%; }
 .field .help { color: var(--cinza); font-size: .85rem; margin-top: 4px; }
 .field .help ul { display: block; list-style: disc; padding-left: 18px; margin: 2px 0 0; }
 .field .errorlist { display: block; }
-.field input[type=text], .field input[type=password], .field input[type=email], .field textarea, .field select {
+.field input[type=text], .field input[type=password], .field input[type=email], .field input[type=number], .field textarea, .field select {
   width: 100%; padding: 9px 11px; border: 1px solid #b9cfdc; border-radius: 6px; font: inherit; background: #fff;
 }
 .field textarea { line-height: 1.5; }

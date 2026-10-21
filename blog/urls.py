@@ -10,7 +10,10 @@ urlpatterns = [
     path('anuncios/<int:pk>/', views.PostDetailView.as_view(), name='post_detail'),
     path('anuncios/<int:pk>/editar/', views.PostUpdateView.as_view(), name='post_update'),
     path('anuncios/<int:pk>/remover/', views.PostDeleteView.as_view(), name='post_delete'),
+    path('anuncios/<int:pk>/vendido/', views.PostToggleSoldView.as_view(), name='post_toggle_sold'),
     path('anuncios/<int:pk>/comentar/', views.CommentCreateView.as_view(), name='comment_create'),
+    path('meus-anuncios/', views.MyPostsView.as_view(), name='my_posts'),
+    path('vendedores/<str:username>/', views.SellerDetailView.as_view(), name='seller_detail'),
     path('categorias/', views.CategoryListView.as_view(), name='category_list'),
     path('categorias/<int:pk>/', views.CategoryDetailView.as_view(), name='category_detail'),
 ]

@@ -17,6 +17,7 @@
         <a href="{% url 'blog:category_list' %}">Categorias</a>
         <a class="btn btn-small" href="{% url 'blog:post_create' %}">+ Anunciar</a>
         {% if user.is_authenticated %}
+        <a href="{% url 'blog:my_posts' %}">Meus anúncios</a>
         <span class="user">Olá, {{ user.first_name|default:user.username }}</span>
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}

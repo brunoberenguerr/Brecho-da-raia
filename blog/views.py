@@ -1,10 +1,12 @@
-from django.contrib.auth import login
+from django.contrib.auth import get_user_model, login
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic.detail import SingleObjectMixin
 
 from .forms import PostForm, SignUpForm
 from .models import Category, Comment, Post
@@ -17,8 +19,11 @@ class PostOwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.get_object().can_edit(self.request.user)
 
 
+SOLD_LAST = ('is_sold', '-posted_at')  # anúncios vendidos vão para o fim das listagens
+
+
 class PostListView(ListView):
-    model = Post
+    queryset = Post.objects.order_by(*SOLD_LAST)
 
 
 class PostDetailView(DetailView):
@@ -47,6 +52,40 @@ class PostUpdateView(PostOwnerRequiredMixin, UpdateView):
 class PostDeleteView(PostOwnerRequiredMixin, DeleteView):
     model = Post
     success_url = reverse_lazy('blog:post_list')
+
+
+class PostToggleSoldView(PostOwnerRequiredMixin, SingleObjectMixin, View):
+    """Marca o anúncio como vendido, ou o reabre se já estava vendido."""
+
+    model = Post
+    http_method_names = ['post']
+
+    def post(self, request, *args, **kwargs):
+        post = self.get_object()
+        post.is_sold = not post.is_sold
+        post.save(update_fields=['is_sold'])
+        return redirect(post)
+
+
+class MyPostsView(LoginRequiredMixin, ListView):
+    template_name = 'blog/post_list.html'
+    extra_context = {'my_posts': True}
+
+    def get_queryset(self):
+        return Post.objects.filter(author=self.request.user).order_by(*SOLD_LAST)
+
+
+class SellerDetailView(DetailView):
+    model = get_user_model()
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+    context_object_name = 'seller'  # "user" já é o usuário logado nos templates
+    template_name = 'blog/post_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['post_list'] = self.object.posts.order_by(*SOLD_LAST)
+        return context
 
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
@@ -80,7 +119,7 @@ class CategoryDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['post_list'] = self.object.posts.all()
+        context['post_list'] = self.object.posts.order_by(*SOLD_LAST)
         return context
 
 
