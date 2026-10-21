@@ -106,7 +106,7 @@ main.container { padding: 28px 20px 48px; flex: 1; width: 100%; }
 .field input[type=text], .field input[type=password], .field textarea, .field select {
   width: 100%; padding: 9px 11px; border: 1px solid #b9cfdc; border-radius: 6px; font: inherit; background: #fff;
 }
-.field textarea { font-family: Consolas, "Courier New", monospace; font-size: .92rem; }
+.field textarea { line-height: 1.5; }
 .field small { display: block; color: var(--cinza); margin-top: 4px; }
 .field ul { list-style: none; padding: 0; margin: 0; display: flex; gap: 18px; flex-wrap: wrap; }
 .field ul label { font-weight: 400; display: inline; }

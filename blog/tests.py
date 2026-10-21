@@ -5,6 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from .formatting import html_to_text, text_to_html
 from .models import Category, Comment, Post
 
 
@@ -30,24 +31,36 @@ class PostCrudTests(TestCase):
 
     def test_create(self):
         response = self.client.post(reverse('blog:post_create'), {
-            'title': 'Palmar Speedo', 'content': '<p>Tam. M</p>',
+            'title': 'Palmar Speedo', 'description': 'Tamanho M.\nPouco uso.\n\n- Tiras novas',
         })
         post = Post.objects.get(title='Palmar Speedo')
         self.assertRedirects(response, reverse('blog:post_detail', args=[post.pk]))
         self.assertEqual(post.author, self.owner)
+        self.assertEqual(post.content, '<p>Tamanho M.<br>Pouco uso.</p>\n<ul><li>Tiras novas</li></ul>')
+
+    def test_create_escapes_typed_html(self):
+        self.client.post(reverse('blog:post_create'), {
+            'title': 'Touca', 'description': '<script>alert(1)</script>',
+        })
+        post = Post.objects.get(title='Touca')
+        self.assertEqual(post.content, '<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>')
 
     def test_create_invalid_shows_errors(self):
-        response = self.client.post(reverse('blog:post_create'), {'title': '', 'content': ''})
+        response = self.client.post(reverse('blog:post_create'), {'title': '', 'description': ''})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'errorlist')
         self.assertEqual(Post.objects.count(), 1)
 
     def test_update(self):
         url = reverse('blog:post_update', args=[self.post.pk])
-        self.assertContains(self.client.get(url), 'Óculos Arena')
-        self.client.post(url, {'title': 'Óculos Arena Cobra', 'content': '<p>Novo</p>'})
+        response = self.client.get(url)
+        self.assertContains(response, 'Óculos Arena')
+        # o HTML salvo volta como texto simples no formulário
+        self.assertContains(response, 'Seminovo</textarea>')
+        self.client.post(url, {'title': 'Óculos Arena Cobra', 'description': 'Novo'})
         self.post.refresh_from_db()
         self.assertEqual(self.post.title, 'Óculos Arena Cobra')
+        self.assertEqual(self.post.content, '<p>Novo</p>')
 
     def test_delete_requires_confirmation(self):
         url = reverse('blog:post_delete', args=[self.post.pk])
@@ -174,3 +187,29 @@ class CategoryTests(TestCase):
     def test_header_links_category_list(self):
         response = self.client.get(reverse('blog:post_list'))
         self.assertContains(response, reverse('blog:category_list'))
+
+
+class FormattingTests(TestCase):
+    TEXT = ('Traje usado em duas provas.\nTecido firme.\n\n'
+            '- Tamanho: 20\n- Estado: muito bom\n\n'
+            'https://i.imgur.com/abc123.jpg\n\n'
+            'Preço: R$ 850,00')
+
+    def test_text_to_html(self):
+        self.assertEqual(text_to_html(self.TEXT), (
+            '<p>Traje usado em duas provas.<br>Tecido firme.</p>\n'
+            '<ul><li>Tamanho: 20</li><li>Estado: muito bom</li></ul>\n'
+            '<p><img src="https://i.imgur.com/abc123.jpg" alt=""></p>\n'
+            '<p>Preço: R$ 850,00</p>'
+        ))
+
+    def test_round_trip(self):
+        self.assertEqual(html_to_text(text_to_html(self.TEXT)), self.TEXT)
+
+    def test_only_image_links_become_images(self):
+        self.assertNotIn('<img', text_to_html('https://exemplo.com/pagina'))
+        self.assertNotIn('<img', text_to_html('javascript:alert(1).png'))
+
+    def test_legacy_html_becomes_readable_text(self):
+        html = '<p>Kit <em>completo</em>.</p><table><tr><td>Palmar</td><td>M</td></tr></table>'
+        self.assertEqual(html_to_text(html), 'Kit completo.\n\nPalmar: M')

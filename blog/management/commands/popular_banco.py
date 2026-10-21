@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
+from blog.formatting import text_to_html
 from blog.models import Category, Comment, Post
 
 TZ = ZoneInfo('America/Sao_Paulo')
@@ -34,15 +35,14 @@ POSTS = [
         'posted_at': data(12, 19, 30),
         'author': 'ana',
         'categories': ['Trajes'],
-        'content': """<p>Traje de competição usado em apenas duas provas (estadual de inverno e um torneio
-universitário). Tecido ainda firme, costuras e silicone da cintura intactos, sem fios puxados.</p>
-<table>
-  <tr><th>Marca/modelo</th><td>Speedo Fastskin LZR Pure Intent (bermuda de competição)</td></tr>
-  <tr><th>Tamanho</th><td>20 (equivale a P)</td></tr>
-  <tr><th>Estado</th><td>Muito bom — 2 usos, lavado só com água fria</td></tr>
-  <tr><th>Retirada</th><td>CEPEUSP ou envio pelos Correios</td></tr>
-</table>
-<p class="preco">R$ 850,00</p>""",
+        'text': """Traje de competição usado em apenas duas provas (estadual de inverno e um torneio universitário). Tecido ainda firme, costuras e silicone da cintura intactos, sem fios puxados.
+
+- Marca/modelo: Speedo Fastskin LZR Pure Intent (bermuda de competição)
+- Tamanho: 20 (equivale a P)
+- Estado: muito bom — 2 usos, lavado só com água fria
+- Retirada: CEPEUSP ou envio pelos Correios
+
+Preço: R$ 850,00""",
         'comments': [
             ('carlos', 'Ainda está disponível? Serve para quem tem 1,78 m e 72 kg?', data(13, 8, 15)),
             ('julia', 'Aceita R$ 700 com retirada no CEPEUSP ainda esta semana?', data(13, 12, 40)),
@@ -54,14 +54,13 @@ universitário). Tecido ainda firme, costuras e silicone da cintura intactos, se
         'posted_at': data(14, 10, 0),
         'author': 'julia',
         'categories': ['Óculos'],
-        'content': """<p>Óculos de prova com lente espelhada e tecnologia antiembaçante <em>Swipe</em>
-(é só passar o dedo na lente molhada). Vem com estojo original e as quatro pontes nasais.</p>
-<ul>
-  <li>Lente sem riscos; espelhamento perfeito</li>
-  <li>Elástico duplo de silicone em bom estado</li>
-  <li>Usado durante uma temporada de competições</li>
-</ul>
-<p class="preco">R$ 210,00</p>""",
+        'text': """Óculos de prova com lente espelhada e tecnologia antiembaçante Swipe (é só passar o dedo na lente molhada). Vem com estojo original e as quatro pontes nasais.
+
+- Lente sem riscos; espelhamento perfeito
+- Elástico duplo de silicone em bom estado
+- Usado durante uma temporada de competições
+
+Preço: R$ 210,00""",
         'comments': [
             ('ana', 'A vedação é boa para quem tem rosto mais fino?', data(14, 18, 20)),
             ('carlos', 'Faço por R$ 180 e busco hoje à noite na Raia Olímpica.', data(15, 9, 45)),
@@ -72,15 +71,14 @@ universitário). Tecido ainda firme, costuras e silicone da cintura intactos, se
         'posted_at': data(16, 15, 10),
         'author': 'carlos',
         'categories': ['Pé de pato', 'Palmar'],
-        'content': """<p>Kit completo para treino de força. Estou mudando de equipe e o técnico novo
-usa outro modelo de equipamento, então estou vendendo o que tenho.</p>
-<table>
-  <tr><th>Item</th><th>Tamanho</th><th>Estado</th></tr>
-  <tr><td>Pé de pato Arena Powerfin Pro</td><td>40/41</td><td>Bom — borracha sem rachaduras</td></tr>
-  <tr><td>Palmar Speedo Biofuse</td><td>M</td><td>Ótimo — tiras trocadas recentemente</td></tr>
-</table>
-<p>Vendo também separado: pé de pato por R$ 220 e palmar por R$ 90.</p>
-<p class="preco">R$ 280,00 o kit</p>""",
+        'text': """Kit completo para treino de força. Estou mudando de equipe e o técnico novo usa outro modelo de equipamento, então estou vendendo o que tenho.
+
+- Pé de pato Arena Powerfin Pro, tamanho 40/41: bom estado, borracha sem rachaduras
+- Palmar Speedo Biofuse, tamanho M: ótimo estado, tiras trocadas recentemente
+
+Vendo também separado: pé de pato por R$ 220 e palmar por R$ 90.
+
+Preço: R$ 280,00 o kit""",
         'comments': [
             ('julia', 'Vende só o palmar? Tenho interesse.', data(16, 19, 0)),
             ('rafael', 'O pé de pato serve para quem calça 42?', data(17, 7, 30)),
@@ -92,13 +90,12 @@ usa outro modelo de equipamento, então estou vendendo o que tenho.</p>
         'posted_at': data(18, 20, 45),
         'author': 'rafael',
         'categories': ['Palmar', 'Óculos'],
-        'content': """<p>Palmar sem tiras (o encaixe é só pelo polegar), ótimo para corrigir a pegada
-da braçada. Os óculos são de treino, lente fumê, perfeitos para piscina descoberta.</p>
-<ul>
-  <li><strong>Palmar Finis Agility</strong> — tamanho M, pouquíssimo uso</li>
-  <li><strong>Óculos Speedo Vanquisher 2.0</strong> — lente fumê, elástico novo</li>
-</ul>
-<p class="preco">R$ 160,00 os dois</p>""",
+        'text': """Palmar sem tiras (o encaixe é só pelo polegar), ótimo para corrigir a pegada da braçada. Os óculos são de treino, lente fumê, perfeitos para piscina descoberta.
+
+- Palmar Finis Agility: tamanho M, pouquíssimo uso
+- Óculos Speedo Vanquisher 2.0: lente fumê, elástico novo
+
+Preço: R$ 160,00 os dois""",
         'comments': [],
     },
 ]
@@ -135,7 +132,7 @@ class Command(BaseCommand):
             autor = usuarios[dados['author']]
             post, criado = Post.objects.get_or_create(
                 title=dados['title'],
-                defaults={'content': dados['content'], 'posted_at': dados['posted_at'],
+                defaults={'content': text_to_html(dados['text']), 'posted_at': dados['posted_at'],
                           'author': autor},
             )
             if not criado:
