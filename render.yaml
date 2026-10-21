@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: brecho-da-raia
+    runtime: python
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: gunicorn brecho.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.14
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DJANGO_SUPERUSER_USERNAME
+        sync: false
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
