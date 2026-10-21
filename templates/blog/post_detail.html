@@ -15,11 +15,17 @@
   {% if categories %}
   <ul class="tags" aria-label="Categorias">
     {% for category in categories %}
-    <li><a href="{% url 'blog:category_detail' category.pk %}">{{ category.name }}</a></li>
+    <li><a href="{% url 'blog:category_detail' category.pk %}">{{ category.name }}{% if category.name == 'Outro' and post.other_category %}: {{ post.other_category }}{% endif %}</a></li>
     {% endfor %}
   </ul>
   {% endif %}
   {% endwith %}
+
+  {% if post.photo %}
+  <figure class="post-photo">
+    <img src="{{ post.photo.url }}" alt="Foto do anúncio {{ post.title }}">
+  </figure>
+  {% endif %}
 
   <div class="post-content">
     {{ post.content|safe }}

@@ -1,17 +1,24 @@
+import io
+import shutil
+import tempfile
 from datetime import timedelta
+from unittest import mock
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image
 
 from .formatting import html_to_text, text_to_html
+from .forms import PostForm
 from .models import Category, Comment, Post
 
 
 class PostCrudTests(TestCase):
     def setUp(self):
-        self.owner = get_user_model().objects.create_user('vendedor', password='senha-de-teste-123')
+        self.owner = get_user_model().objects.create_user('vendedor')
         self.post = Post.objects.create(title='Óculos Arena', content='<p>Seminovo</p>',
                                         author=self.owner)
         self.client.force_login(self.owner)
@@ -74,9 +81,9 @@ class PostCrudTests(TestCase):
 class PostPermissionTests(TestCase):
     def setUp(self):
         User = get_user_model()
-        self.owner = User.objects.create_user('dono', password='senha-de-teste-123')
-        self.other = User.objects.create_user('outro', password='senha-de-teste-123')
-        self.staff = User.objects.create_user('equipe', password='senha-de-teste-123',
+        self.owner = User.objects.create_user('dono')
+        self.other = User.objects.create_user('outro')
+        self.staff = User.objects.create_user('equipe',
                                               is_staff=True)
         self.post = Post.objects.create(title='Traje Arena', content='<p>Tam. 22</p>',
                                         author=self.owner)
@@ -118,7 +125,7 @@ class PostPermissionTests(TestCase):
 
 class CommentTests(TestCase):
     def setUp(self):
-        self.user = get_user_model().objects.create_user('ana', password='senha-de-teste-123')
+        self.user = get_user_model().objects.create_user('ana')
         self.post = Post.objects.create(title='Pé de pato Arena', content='<p>Tam. 40</p>')
         self.url = reverse('blog:comment_create', args=[self.post.pk])
 
@@ -213,3 +220,90 @@ class FormattingTests(TestCase):
     def test_legacy_html_becomes_readable_text(self):
         html = '<p>Kit <em>completo</em>.</p><table><tr><td>Palmar</td><td>M</td></tr></table>'
         self.assertEqual(html_to_text(html), 'Kit completo.\n\nPalmar: M')
+
+
+def png_upload(name='foto.png', size=(40, 30)):
+    buffer = io.BytesIO()
+    Image.new('RGB', size, (11, 92, 143)).save(buffer, format='PNG')
+    return SimpleUploadedFile(name, buffer.getvalue(), content_type='image/png')
+
+
+class PhotoUploadTests(TestCase):
+    def setUp(self):
+        self.media = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.media, ignore_errors=True)
+        self.override = override_settings(MEDIA_ROOT=self.media)
+        self.override.enable()
+        self.addCleanup(self.override.disable)
+        self.user = get_user_model().objects.create_user('vendedor')
+        self.client.force_login(self.user)
+
+    def create(self, **extra):
+        data = {'title': 'Pé de pato', 'description': 'Tam. 40', **extra}
+        return self.client.post(reverse('blog:post_create'), data)
+
+    def test_upload_photo_shows_on_detail_and_list(self):
+        self.create(photo=png_upload())
+        post = Post.objects.get()
+        self.assertTrue(post.photo.name.startswith('anuncios/'))
+        self.assertContains(self.client.get(post.get_absolute_url()), post.photo.url)
+        self.assertContains(self.client.get(reverse('blog:post_list')), post.photo.url)
+
+    def test_photo_is_optional(self):
+        self.create()
+        self.assertFalse(Post.objects.get().photo)
+
+    def test_rejects_file_that_is_not_an_image(self):
+        fake = SimpleUploadedFile('foto.png', b'<script>alert(1)</script>', content_type='image/png')
+        response = self.create(photo=fake)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Post.objects.exists())
+
+    def test_rejects_photo_over_size_limit(self):
+        with mock.patch('blog.forms.MAX_PHOTO_SIZE', 10):
+            response = self.create(photo=png_upload())
+        self.assertContains(response, 'no máximo 5 MB')
+        self.assertFalse(Post.objects.exists())
+
+
+class OtherCategoryTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user('vendedor')
+        self.client.force_login(self.user)
+        self.other = Category.objects.get(name='Outro')  # criada pela migração 0006
+        self.trajes = Category.objects.create(name='Trajes', description='Trajes')
+
+    def create(self, **extra):
+        data = {'title': 'Touca Arena', 'description': 'Silicone', **extra}
+        return self.client.post(reverse('blog:post_create'), data)
+
+    def test_other_is_listed_last_in_form(self):
+        names = [category.name for category in PostForm().fields['categories'].queryset]
+        self.assertEqual(names, ['Trajes', 'Outro'])
+
+    def test_other_requires_description(self):
+        response = self.create(categories=[self.other.pk])
+        self.assertContains(response, 'Diga qual é a outra categoria.')
+        self.assertFalse(Post.objects.exists())
+
+    def test_other_with_description(self):
+        self.create(categories=[self.other.pk], other_category='Touca')
+        post = Post.objects.get()
+        self.assertEqual(list(post.categories.all()), [self.other])
+        self.assertEqual(post.other_category, 'Touca')
+        self.assertContains(self.client.get(post.get_absolute_url()), 'Outro: Touca')
+
+    def test_typing_other_category_checks_other_automatically(self):
+        self.create(categories=[self.trajes.pk], other_category='Touca')
+        post = Post.objects.get()
+        self.assertEqual(set(post.categories.all()), {self.trajes, self.other})
+
+    def test_unchecking_other_clears_description(self):
+        self.create(categories=[self.other.pk], other_category='Touca')
+        post = Post.objects.get()
+        self.client.post(reverse('blog:post_update', args=[post.pk]), {
+            'title': post.title, 'description': 'Silicone', 'categories': [self.trajes.pk],
+        })
+        post.refresh_from_db()
+        self.assertEqual(post.other_category, '')
+        self.assertEqual(list(post.categories.all()), [self.trajes])

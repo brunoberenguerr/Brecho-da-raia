@@ -58,7 +58,8 @@ main.container { padding: 28px 20px 48px; flex: 1; width: 100%; }
   border-radius: 8px; padding: 14px 18px;
   display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
 }
-.post-card a { font-weight: 600; font-size: 1.08rem; text-decoration: none; }
+.post-card a { flex: 1; font-weight: 600; font-size: 1.08rem; text-decoration: none; }
+.post-card .thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--borda); }
 .post-card a:hover { text-decoration: underline; }
 .post-card time { color: var(--cinza); font-size: .9rem; white-space: nowrap; }
 .empty { background: var(--agua); padding: 16px; border-radius: 8px; }
@@ -69,6 +70,9 @@ main.container { padding: 28px 20px 48px; flex: 1; width: 100%; }
 .meta { color: var(--cinza); margin: 4px 0 18px; }
 .post-content { background: #fff; border: 1px solid var(--borda); border-radius: 8px; padding: 6px 22px; }
 .post-content img { max-width: 100%; border-radius: 6px; }
+.post-photo { margin: 0 0 18px; background: #fff; border: 1px solid var(--borda); border-radius: 8px; padding: 10px; text-align: center; }
+.post-photo img { max-width: 100%; max-height: 460px; object-fit: contain; border-radius: 6px; }
+#field-other_category { padding-left: 26px; margin-top: -6px; }
 .post-content table { border-collapse: collapse; margin: 10px 0; }
 .post-content th, .post-content td { border: 1px solid var(--borda); padding: 6px 12px; text-align: left; }
 .post-content th { background: var(--agua); }
@@ -103,6 +107,7 @@ main.container { padding: 28px 20px 48px; flex: 1; width: 100%; }
 .form { background: #fff; border: 1px solid var(--borda); border-radius: 8px; padding: 20px 22px; }
 .field { margin-bottom: 16px; }
 .field label { display: block; font-weight: 600; margin-bottom: 6px; }
+.field input[type=file] { font: inherit; }
 .field input[type=text], .field input[type=password], .field textarea, .field select {
   width: 100%; padding: 9px 11px; border: 1px solid #b9cfdc; border-radius: 6px; font: inherit; background: #fff;
 }

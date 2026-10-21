@@ -18,6 +18,7 @@
 <ul class="post-list">
   {% for post in post_list %}
   <li class="post-card">
+    {% if post.photo %}<img class="thumb" src="{{ post.photo.url }}" alt="">{% endif %}
     <a href="{% url 'blog:post_detail' post.pk %}">{{ post.title }}</a>
     <time datetime="{{ post.posted_at|date:'c' }}">{{ post.posted_at|date:"d/m/Y H:i" }}</time>
   </li>

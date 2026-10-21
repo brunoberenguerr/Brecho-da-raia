@@ -4,6 +4,9 @@ from django.urls import reverse
 from django.utils import timezone
 
 
+OTHER_CATEGORY_NAME = 'Outro'
+
+
 class Category(models.Model):
     """Tipo de item anunciado (trajes, óculos, pés de pato, palmares...)."""
 
@@ -34,6 +37,9 @@ class Post(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posts',
         null=True, blank=True, verbose_name='autor',
     )
+    photo = models.ImageField('foto', upload_to='anuncios/', blank=True)
+    # Descreve o item quando o anúncio está na categoria "Outro" (ex.: touca, snorkel)
+    other_category = models.CharField('outra categoria', max_length=60, blank=True)
 
     class Meta:
         ordering = ['-posted_at']

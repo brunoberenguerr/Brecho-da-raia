@@ -8,11 +8,11 @@
   <p>Descreva o item: modelo, tamanho, estado de conservação e preço.</p>
 </section>
 
-<form method="post" class="form">
+<form method="post" class="form" enctype="multipart/form-data">
   {% csrf_token %}
   {{ form.non_field_errors }}
   {% for field in form %}
-  <div class="field">
+  <div class="field" id="field-{{ field.name }}">
     {{ field.label_tag }}
     {{ field }}
     {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
@@ -28,4 +28,18 @@
     {% endif %}
   </div>
 </form>
+
+{% if form.other %}
+<script>
+  // Mostra o campo "Qual outra categoria?" só quando "Outro" estiver marcado
+  (function () {
+    var box = document.querySelector('input[name="categories"][value="{{ form.other.pk }}"]');
+    var field = document.getElementById('field-other_category');
+    if (!box || !field) return;
+    function sync() { field.hidden = !box.checked && !field.querySelector('input').value; }
+    box.addEventListener('change', sync);
+    sync();
+  })();
+</script>
+{% endif %}
 {% endblock %}
